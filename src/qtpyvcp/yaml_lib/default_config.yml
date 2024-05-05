@@ -180,4 +180,6 @@ settings:
 
   backplot.multitool-colors:
     default_value: True
- 
+
+  backplot.zoom:
+    default_value: 1.0

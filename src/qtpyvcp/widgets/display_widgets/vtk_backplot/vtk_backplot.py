@@ -33,7 +33,7 @@ from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from qtpyvcp import actions
 from qtpyvcp.widgets import VCPWidget
 from qtpyvcp.utilities import logger
-from qtpyvcp.utilities.settings import connectSetting, getSetting
+from qtpyvcp.utilities.settings import connectSetting, getSetting, setSetting
 
 
 from .base_backplot import BaseBackPlot
@@ -295,6 +295,7 @@ class VTKBackPlot(QVTKRenderWindowInteractor, VCPWidget, BaseBackPlot):
             connectSetting('backplot.perspective-view', self.viewPerspective)
             connectSetting('backplot.view', self.setView)
             connectSetting('backplot.multitool-colors', self.showMultiColorPath)
+            connectSetting('backplot.zoom', self.setZoom)
 
 
     def initialize(self):
@@ -1364,9 +1365,9 @@ class VTKBackPlot(QVTKRenderWindowInteractor, VCPWidget, BaseBackPlot):
     @Slot()
     def zoomIn(self):
         if self.camera.GetParallelProjection():
-            parallelScale = self.camera.GetParallelScale() * 0.9
-            self.camera.SetParallelScale(parallelScale)
-            LOG.debug("---camera parallel projection {}".format(parallelScale))
+            parallelScale = round(self.camera.GetParallelScale() * 0.9, 2)
+            setSetting("backplot.zoom", parallelScale)
+            #LOG.debug("---camera parallel projection {}".format(parallelScale))
         else:
             self.renderer.ResetCameraClippingRange()
             self.camera.Zoom(1.1)
@@ -1377,8 +1378,8 @@ class VTKBackPlot(QVTKRenderWindowInteractor, VCPWidget, BaseBackPlot):
     @Slot()
     def zoomOut(self):
         if self.camera.GetParallelProjection():
-            parallelScale = self.camera.GetParallelScale() * 1.1
-            self.camera.SetParallelScale(parallelScale)
+            parallelScale = round(self.camera.GetParallelScale() * 1.1, 2)
+            setSetting("backplot.zoom", parallelScale)
         else:
             self.renderer.ResetCameraClippingRange()
             self.camera.Zoom(0.9)
@@ -1611,3 +1612,11 @@ class VTKBackPlot(QVTKRenderWindowInteractor, VCPWidget, BaseBackPlot):
     @userColor.reset
     def userColor(self):
         self._user_color = self._default_user_color
+
+    # Zoom
+
+    @Slot(bool)
+    @Slot(object)
+    def setZoom(self, zoom):
+        self.camera.SetParallelScale(zoom)
+        self.renderer_window.Render()
